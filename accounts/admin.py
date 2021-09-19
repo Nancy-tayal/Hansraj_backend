@@ -13,7 +13,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('uid','password','role')
+        fields = ('uid','password','role','email','is_staff','is_superuser','is_admin','is_active')
 
     def clean_password2(self):
         password = self.cleaned_data.get("password")
@@ -36,7 +36,7 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('uid', 'password','role',)
+        fields = ('uid', 'password','role','email','is_staff','is_superuser','is_admin','is_active')
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -53,20 +53,21 @@ class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('uid','password','role')
+    list_display = ('uid','password','role','email','date_joined','last_login')
     list_filter = ('is_staff',)
     fieldsets = (
-        (None, {'fields': ('uid', 'password','role')}),
-        ('Permissions', {'fields': ('is_staff',)}),
+        (None, {'fields': ('uid', 'password','role','email')}),
+        ('Permissions', {'fields': ('is_staff','is_superuser','is_admin','is_active')}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('uid','password','role'),
+            'fields': ('uid','password','role','email','is_staff','is_superuser','is_admin','is_active'),
         }),
     )
+
     search_fields = ('uid',)
     ordering = ('uid',)
     filter_horizontal = ()

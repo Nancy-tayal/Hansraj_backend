@@ -38,7 +38,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     uid = models.CharField(unique=True,max_length=20)
-    password = models.CharField(max_length=100,null=True)
+    password = models.CharField(max_length=100)
     # flag = models.IntegerField()
     ROLE_TYPES = (
         (0, 'ADMIN'),
@@ -46,11 +46,14 @@ class User(AbstractBaseUser):
         (2, 'STUDENT'),
     )
     role = models.IntegerField(choices=ROLE_TYPES,null=True)
+    email = models.CharField(max_length=50,null=True)
+    otp = models.IntegerField(null=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-
+    date_joined = models.DateTimeField(auto_now_add=True)
+    last_login = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
