@@ -100,8 +100,9 @@ def otp_verification(request):
 @permission_classes((IsAuthenticated,))
 def change_password(request):
     user=User.objects.get(uid=request.user.uid)
+    print(user.password)
     if user is not None:
-        if request.data.get('old_password') == request.user.password:
+        if user.check_password(request.data.get('old_password')):
             if request.data.get('new_password') == request.data.get('confirm_password'):
                 user.set_password(request.data.get('new_password'))
                 user.save()
