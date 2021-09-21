@@ -96,6 +96,24 @@ def otp_verification(request):
         return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
+@permission_classes((AllowAny,))
+@csrf_exempt
+@user_passes_test(lambda u: not u.is_authenticated)
+def forget_password(request):
+    user=User.objects.get(uid=request.data.get('uid'))
+    print(user.password)
+    if user is not None:
+        if request.data.get('new_password') == request.data.get('confirm_password'):
+            user.set_password(request.data.get('new_password'))
+            user.save()
+            return Response({'detail':'Password changed successful'},status=status.HTTP_200_OK)
+        else:
+            return Response({'detail':'Password not matching'},status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
 @csrf_exempt
 @permission_classes((IsAuthenticated,))
 def change_password(request):
