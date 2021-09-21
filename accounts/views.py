@@ -46,8 +46,8 @@ def LoginView(request):
             }
             return Response(data,status=status.HTTP_200_OK)
         else:
-            return Response({'detail':'Invalid user'},status=status.HTTP_401_UNAUTHORIZED)
-    return Response({'detail':'Invalid credentials'},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message':'Invalid user'},status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'message':'Invalid credentials'},status=status.HTTP_401_UNAUTHORIZED)
 
 def random_id():
     id = int(''.join(secrets.choice(string.digits)for i in range(6)))
@@ -75,9 +75,9 @@ def send_otp(request):
         print(email_count)
         user.otp=email_otp
         user.save()
-        return Response({'detail':'Mail sent'},status=status.HTTP_200_OK)
+        return Response({'message':'Mail sent'},status=status.HTTP_200_OK)
     else:
-        return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -89,11 +89,11 @@ def otp_verification(request):
         if user.otp == int(request.data.get('otp')):
             user.otp = None
             user.save()
-            return Response({'detail':'OTP Verified'},status=status.HTTP_200_OK)
+            return Response({'message':'OTP Verified'},status=status.HTTP_200_OK)
         else:
-            return Response({'detail':'Invalid OTP'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message':'Invalid OTP'},status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -106,11 +106,11 @@ def forget_password(request):
         if request.data.get('new_password') == request.data.get('confirm_password'):
             user.set_password(request.data.get('new_password'))
             user.save()
-            return Response({'detail':'Password changed successful'},status=status.HTTP_200_OK)
+            return Response({'message':'Password changed successful'},status=status.HTTP_200_OK)
         else:
-            return Response({'detail':'Password not matching'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message':'Password not matching'},status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])
@@ -124,12 +124,12 @@ def change_password(request):
             if request.data.get('new_password') == request.data.get('confirm_password'):
                 user.set_password(request.data.get('new_password'))
                 user.save()
-                return Response({'detail':'Password changed successful'},status=status.HTTP_200_OK)
+                return Response({'message':'Password changed successful'},status=status.HTTP_200_OK)
             else:
-                return Response({'detail':'Password not matching'},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message':'Password not matching'},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'detail':'Invalid Old Password'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message':'Invalid Old Password'},status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
 
 
