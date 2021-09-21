@@ -8,7 +8,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes,api_view
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
+from django.conf import settings
 import secrets
 import string
 # Create your views here.
@@ -52,23 +53,45 @@ def random_id():
     id = int(''.join(secrets.choice(string.digits)for i in range(6)))
     return id
 
-@api_view(["GET","POST"])
+@api_view(["POST"])
+@permission_classes((AllowAny,))
 @csrf_exempt
-@permission_classes((IsAuthenticated,))
-def otp_verification(request):
-    user=User.objects.get(uid=request.user.uid)
+@user_passes_test(lambda u: not u.is_authenticated)
+def send_otp(request):
+    user=User.objects.get(uid=request.data.get('uid'))
     if user is not None:
-        if request.method == "GET":
-            email_otp=random_id()
-            Emess=f"Welcome to Hansraj College !\n Your otp is {email_otp}"
-            send_mail('Change Password',Emess,[request.user.email],fail_silently=True)
-            user.otp=email_otp
+        email_otp=random_id()
+        subject = 'Change Password'
+        message = f"Welcome to Hansraj College !\n Your otp is {email_otp}"
+        email_from = settings.EMAIL_HOST_USER
+        recipient_list = [user.email,]
+        #send_mail(subject, message, email_from, recipient_list, fail_silently=True)
+        email = EmailMessage(
+                    subject,
+                    message,
+                    email_from,
+                    recipient_list,)
+        email_count = email.send(fail_silently=False)
+        print(email_count)
+        user.otp=email_otp
+        user.save()
+        return Response({'detail':'Mail sent'},status=status.HTTP_200_OK)
+    else:
+        return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+@csrf_exempt
+@user_passes_test(lambda u: not u.is_authenticated)
+def otp_verification(request):
+    user=User.objects.get(uid=request.data.get('uid'))
+    if user is not None:
+        if user.otp == int(request.data.get('otp')):
+            user.otp = None
             user.save()
+            return Response({'detail':'OTP Verified'},status=status.HTTP_200_OK)
         else:
-            if request.otp == request.data.get('otp'):
-                return Response({'detail':'OTP Verified'},status=status.HTTP_200_OK)
-            else:
-                return Response({'detail':'Invalid OTP)'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail':'Invalid OTP'},status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'detail':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
 
