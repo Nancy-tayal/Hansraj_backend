@@ -9,7 +9,7 @@ from students.models import StudentDetail
 User=get_user_model()
 
 class FacultyDetail(models.Model):
-    tid= models.ForeignKey(User,on_delete=models.CASCADE)
+    tid= models.OneToOneField(User,on_delete=models.CASCADE)
     name=models.CharField(max_length=50,null=False)
     department=models.CharField(max_length=50,null=False)
     email=models.CharField(max_length=100,null=False)
@@ -19,11 +19,11 @@ class FacultyDetail(models.Model):
 
 class SubjectDetail(models.Model):
     tid=models.ForeignKey(FacultyDetail, on_delete=models.CASCADE)
-    subject_id=models.AutoField(primary_key = True)
+    subject_id=models.IntegerField()
     subject_name=models.CharField(max_length=50,null=False)
 
     def __str__(self):
-        return str(self.subject_id)
+        return str(self.subject_name)+" by "+self.tid.name
     
 @receiver(post_save, sender=User)
 def create_faculty(sender, instance, **kwargs):

@@ -9,7 +9,7 @@ from django.dispatch import receiver
 User=get_user_model()
 
 class StudentDetail(models.Model):
-    sid= models.ForeignKey(User,on_delete=models.CASCADE)
+    sid= models.OneToOneField(User,on_delete=models.CASCADE)
     email=models.EmailField(max_length=100)
     name=models.CharField(max_length=50,null=True)
     university_roll_no=models.IntegerField(null=True)
