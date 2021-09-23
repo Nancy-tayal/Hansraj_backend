@@ -40,10 +40,13 @@ class User(AbstractBaseUser):
     uid = models.CharField(unique=True,max_length=20)
     password = models.CharField(max_length=100)
     # flag = models.IntegerField()
+    ADMIN = 0
+    TEACHER = 1
+    STUDENT = 2
     ROLE_TYPES = (
-        (0, 'ADMIN'),
-        (1, 'TEACHER'),
-        (2, 'STUDENT'),
+        (ADMIN, 'ADMIN'),
+        (TEACHER, 'TEACHER'),
+        (STUDENT, 'STUDENT'),
     )
     role = models.IntegerField(choices=ROLE_TYPES,null=True)
     email = models.CharField(max_length=50,null=True)
