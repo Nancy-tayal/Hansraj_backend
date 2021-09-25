@@ -20,11 +20,9 @@ from faculty.models import Subject
 User = get_user_model()
 
 def addStudentDetails(student):
-    #detail =  StudentDetail.objects.create(sid= User.objects.get(uid=student['sid']), name = student['name'], email = student['email'], university_roll_no = student['university_roll_no'], semester = student['semester'])
-    #detail.course = student['course']
-    #print(detail.course)
-    #detail.save()
-    print('xyz', len(student['course']))
+    detail =  StudentDetail.objects.create(sid= User.objects.get(uid=student['sid']), name = student['name'], email = student['email'], university_roll_no = student['university_roll_no'], semester = student['semester'])
+    detail.course = student['course']
+    detail.save()
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))
