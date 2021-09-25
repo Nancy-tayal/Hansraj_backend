@@ -52,6 +52,9 @@ INSTALLED_APPS = [
     'accounts',
     'students',
     'faculty',
+    'marks',
+    'attendance',
+    'timetable',
 ]
 
 REST_FRAMEWORK = {

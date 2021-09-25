@@ -12,6 +12,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 import secrets
 import string
+import pandas as pd
 # Create your views here.
 
 User=get_user_model()
@@ -34,6 +35,9 @@ def LoginView(request):
     uid=data.get('uid')
     password=data.get('password')
     role=data.get('role')
+    if (uid is None or password is None or role is None):
+        return Response({'message':'Provide All the Details'},status=status.HTTP_400_BAD_REQUEST)
+    
     user = auth.authenticate(uid=uid,password=password)
     print('user: ',user)
     if user:
@@ -131,5 +135,25 @@ def change_password(request):
             return Response({'message':'Invalid Old Password'},status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'message':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+
+
+
+def createuser(newuser):
+    user=  User.objects.create_user(uid= newuser['uid'], password = str(newuser['password']), role = newuser['role'], email = newuser['email'])
+    user.save()
+
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+@csrf_exempt
+@user_passes_test(lambda u: not u.is_authenticated)
+def addUsers(request):
+    if request.data.get('file') is None :
+        return Response({'message':'Please Provide the excel file'},status=status.HTTP_400_BAD_REQUEST)
+    
+    df = pd.read_excel(request.data.get('file'))
+    df.apply(createuser, axis=1)
+    return Response({'message':'Users added successfully'},status=status.HTTP_200_OK)
+    
 
 
