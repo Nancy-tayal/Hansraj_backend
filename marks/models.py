@@ -5,6 +5,13 @@ from faculty.models import SubjectDetail
 
 # Create your models here.
 
+class ObjectDoesNotExistManager(models.Manager):
+    def get_or_none(self, *args, **kwargs):
+        qs = self.get_queryset().filter(*args, **kwargs)
+        if qs.count() == 1:
+            return qs.first()
+        return None
+
 class Marks(models.Model):
     sid=models.ForeignKey(StudentDetail, on_delete=models.CASCADE)
     detail_id=models.ForeignKey(SubjectDetail, on_delete=models.CASCADE)
@@ -44,6 +51,8 @@ class Marks_Out_Of(models.Model):
     i3=models.IntegerField(null=True)
     practical=models.IntegerField(null=True)
     total=models.IntegerField(null=True)
+
+    objects = ObjectDoesNotExistManager()
 
     class Meta:
         db_table = 'Marks_Out_Of'

@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 # Create your models here.
 
+
 class UserManager(BaseUserManager):
     # use_in_migrations = True
 

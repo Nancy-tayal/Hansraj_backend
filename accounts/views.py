@@ -13,6 +13,8 @@ from django.conf import settings
 import secrets
 import string
 import pandas as pd
+from faculty.models import FacultyDetail, Subject, SubjectDetail
+from students.models import StudentDetail
 # Create your views here.
 
 User=get_user_model()
@@ -34,20 +36,40 @@ def LoginView(request):
     data=request.data
     uid=data.get('uid')
     password=data.get('password')
-    role=data.get('role')
+    role=int(data.get('role'))
     if (uid is None or password is None or role is None):
         return Response({'message':'Provide All the Details'},status=status.HTTP_400_BAD_REQUEST)
     
     user = auth.authenticate(uid=uid,password=password)
     print('user: ',user)
     if user:
-        if int(role) == user.role:
+        if role == user.role:
             token = get_tokens_for_user(user)
-            data={
-                'token':token,
-                'uid':user.uid,
-                'role':user.role,
-            }
+            if role == 1:
+                teacher = FacultyDetail.objects.get(tid = user)
+                data={
+                    'token': token,
+                    'uid': user.uid,
+                    'name': teacher.name,
+                    'department': teacher.department,
+                    'email': teacher.email
+                }
+            elif role == 2:
+                student = StudentDetail.objects.get(sid = user)
+                data={
+                    'token': token,
+                    'uid': user.uid,
+                    'name': student.name,
+                    'email': student.email,
+                    'course': student.course,
+                    'semester': student.semester,
+                    'university_roll_no': student.university_roll_no,
+                }
+            else:
+                data={
+                    'token': token,
+                    'uid': user.uid,
+                }
             return Response(data,status=status.HTTP_200_OK)
         else:
             return Response({'message':'Invalid user'},status=status.HTTP_401_UNAUTHORIZED)
@@ -139,8 +161,13 @@ def change_password(request):
 
 
 def createuser(newuser):
-    user=  User.objects.create_user(uid= newuser['uid'], password = str(newuser['password']), role = newuser['role'], email = newuser['email'])
-    user.save()
+    try:
+        print(newuser)
+        user=  User.objects.create_user(uid= newuser['uid'], password = str(newuser['password']), role = newuser['role'], email = newuser['email'])
+        user.save()
+    except:
+        return newuser['uid']
+    
 
 
 @api_view(["POST"])
@@ -152,7 +179,10 @@ def addUsers(request):
         return Response({'message':'Please Provide the excel file'},status=status.HTTP_400_BAD_REQUEST)
     
     df = pd.read_excel(request.data.get('file'))
-    df.apply(createuser, axis=1)
+    for i in df.index:
+        x = createuser(df.iloc[i])
+        if x is not None:
+            return Response({'message': 'User with uid {} already exist!'.format(x)}, status = status.HTTP_400_BAD_REQUEST)
     return Response({'message':'Users added successfully'},status=status.HTTP_200_OK)
     
 

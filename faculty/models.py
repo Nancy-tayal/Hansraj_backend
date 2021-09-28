@@ -8,6 +8,13 @@ from students.models import StudentDetail
 
 User=get_user_model()
 
+class ObjectDoesNotExistManager(models.Manager):
+    def get_or_none(self, *args, **kwargs):
+        qs = self.get_queryset().filter(*args, **kwargs)
+        if qs.count() == 1:
+            return qs.first()
+        return None
+
 class FacultyDetail(models.Model):
     tid= models.OneToOneField(User,on_delete=models.CASCADE)
     name=models.CharField(max_length=50,null=False)
@@ -39,7 +46,9 @@ class FacultyDetail(models.Model):
 
 class Subject(models.Model):
     subject_id = models.AutoField(primary_key=True)
-    subject_name=models.CharField(max_length=50,null=False)
+    subject_name = models.CharField(max_length=50,null=False)
+
+    objects = ObjectDoesNotExistManager()
 
     def __str__(self):
         return self.subject_name + ' (' + str(self.subject_id) + ')'
@@ -48,6 +57,8 @@ class SubjectDetail(models.Model):
     detail_id = models.AutoField(primary_key=True)
     tid=models.ForeignKey(FacultyDetail, on_delete=models.CASCADE)
     subject_id=models.ForeignKey(Subject,on_delete=models.CASCADE)
+
+    objects = ObjectDoesNotExistManager()
 
     def __str__(self):
         return str(self.subject_id.subject_name)+" by "+self.tid.name
