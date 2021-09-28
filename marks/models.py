@@ -31,6 +31,8 @@ class Marks(models.Model):
     practical=models.IntegerField(null=True)
     total=models.IntegerField(null=True)
 
+    objects = ObjectDoesNotExistManager()
+
     class Meta:
         db_table = 'Marks'
 

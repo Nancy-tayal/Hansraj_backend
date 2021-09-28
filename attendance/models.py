@@ -29,6 +29,8 @@ class Attendance(models.Model):
     m12=models.IntegerField(null=True, default= 0)
     total=models.IntegerField(null=True, default= 0)
 
+    objects = ObjectDoesNotExistManager()
+
     class Meta:
         db_table = 'Attendance'
 

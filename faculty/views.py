@@ -1,20 +1,13 @@
-from os import stat
-from re import S, sub
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib import auth
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes,api_view
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import EmailMessage
 from django.conf import settings
-import secrets
-import string
 import pandas as pd
 from .models import SubjectDetail, Subject, FacultyDetail
 from attendance.models import Attendance_Out_Of
@@ -129,57 +122,4 @@ def subjectsList(request):
 
 
 
-@api_view(["POST"])
-@csrf_exempt
-@permission_classes((IsAuthenticated,))
-def studentsAttendanceList(request):
-    teacher = FacultyDetail.objects.get(tid= request.user)
-    if teacher is not None:
-        subject_id = request.data.get('subject_id')
-        month = request.data.get('month')
-        total_lectures = int(request.data.get('total_lectures'))
-        if subject_id is None or month is None or total_lectures is None:
-            return Response({'message':'Provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
-        else:
-            detail_id = SubjectDetail.objects.get(tid = teacher, subject_id = Subject.objects.get(subject_id = subject_id))
-            attendance = Attendance_Out_Of.objects.get_or_none(detail_id = detail_id)
-            if attendance is None:
-                attendance = Attendance_Out_Of.objects.create(**{month : total_lectures, 'detail_id' : detail_id})
-            else:
-                setattr(attendance, month, total_lectures) 
-            attendance.total = attendance.m1 + attendance.m2 + attendance.m3 + attendance.m4 + attendance.m5 + attendance.m6 + attendance.m7 + attendance.m8 + attendance.m9 + attendance.m10 + attendance.m11 + attendance.m12   
-            attendance.save()
 
-            subjectdetails = StudentDetail.objects.filter(subject = SubjectDetail.objects.get(tid = teacher, subject_id = Subject.objects.get(subject_id = subject_id)))
-            serialized_data = StudentsListSerializer(subjectdetails, many=True)
-            return Response(serialized_data.data,status=status.HTTP_200_OK)                 
-    else:
-        return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(["POST"])
-@csrf_exempt
-@permission_classes((IsAuthenticated,))
-def studentsMarksList(request):
-    teacher = FacultyDetail.objects.get(tid= request.user)
-    if teacher is not None:
-        subject_id = request.data.get('subject_id')
-        field = request.data.get('field')
-        total_marks = int(request.data.get('total_marks'))
-        if subject_id is None or field is None or total_marks is None:
-            return Response({'message':'Provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
-        else:
-            detail_id = SubjectDetail.objects.get(tid = teacher, subject_id = Subject.objects.get(subject_id = subject_id))
-            print(detail_id)
-            marks = Marks_Out_Of.objects.get_or_none(detail_id = detail_id)
-            if marks is None:
-                marks = Marks_Out_Of.objects.create(**{field : total_marks, 'detail_id' : detail_id})
-            else:
-                setattr(marks, field, total_marks)
-            marks.save()
-
-            subjectdetails = StudentDetail.objects.filter(subject = SubjectDetail.objects.get(tid = teacher, subject_id = Subject.objects.get(subject_id = subject_id)))
-            serialized_data = StudentsListSerializer(subjectdetails, many=True)
-            return Response(serialized_data.data,status=status.HTTP_200_OK)                 
-    else:
-        return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
