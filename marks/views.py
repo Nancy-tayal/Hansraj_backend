@@ -1,22 +1,17 @@
-from django.shortcuts import render
+from django.db.models import F
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib import auth
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes,api_view
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import EmailMessage
-from django.conf import settings
-import secrets
-import string
 import pandas as pd
 from faculty.models import SubjectDetail, Subject, FacultyDetail
 from students.models import StudentDetail
 from .models import Marks_Out_Of, Marks
+from django.http import JsonResponse
 # Create your views here.
 
 User = get_user_model()
@@ -47,7 +42,10 @@ def uploadMarks(request):
                 print('hi')
                 setattr(marks, field, total_marks) 
             marks.save()
-            df = pd.read_excel(file)
+            try:
+                df = pd.read_excel(file)
+            except:
+                return Response({'message':'Incorrect File Format!'},status=status.HTTP_400_BAD_REQUEST)
             for i in df.index:
                 sid = StudentDetail.objects.get(sid = User.objects.get(uid=df.iloc[i]['sid']))
                 stud_marks = Marks.objects.get_or_none(detail_id = detail_id, sid = sid )
@@ -62,3 +60,27 @@ def uploadMarks(request):
     else:
         return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["POST"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def studentsMarks(request):
+    teacher = FacultyDetail.objects.get(tid= request.user)
+    subject = request.data.get('subject_id')
+    field = request.data.get('field')
+    if teacher is not None :
+        if subject is None or field is None:
+            return Response({'message':'Please provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
+        subject_id = Subject.objects.get_or_none(subject_id = subject)
+        if subject_id is None:
+            return Response({'message':'Invalid Subject ID!'},status=status.HTTP_400_BAD_REQUEST)
+        detail_id = SubjectDetail.objects.get_or_none(tid = teacher, subject_id = subject_id)
+        total = Marks_Out_Of.objects.get_or_none(detail_id = detail_id)
+        total = total.__dict__
+        stud_marks = Marks.objects.filter(detail_id = detail_id).values(RollNo =F('sid__sid__uid'), Name =F('sid__name') , Marks = F(field)).order_by('sid__sid__uid')
+        x = list(stud_marks)
+        y = {}
+        y['total_marks']= total[field]
+        x.insert(0,y)
+        return JsonResponse(x,status=status.HTTP_200_OK, safe=False)
+    else:
+        return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)

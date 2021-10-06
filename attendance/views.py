@@ -1,23 +1,15 @@
-from django.shortcuts import render
+from django.db.models import F
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib import auth
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes,api_view
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import EmailMessage
-from django.conf import settings
-import secrets
-import string
 import pandas as pd
 from faculty.models import SubjectDetail, Subject, FacultyDetail
 from .models import Attendance_Out_Of, Attendance
 from students.models import StudentDetail
-from marks.models import Marks_Out_Of, Marks
+from django.http import JsonResponse
 # Create your views here.
 User = get_user_model()
 
@@ -49,7 +41,10 @@ def uploadAttendance(request):
             attendance.total = attendance.m1 + attendance.m2 + attendance.m3 + attendance.m4 + attendance.m5 + attendance.m6 + attendance.m7 + attendance.m8 + attendance.m9 + attendance.m10 + attendance.m11 + attendance.m12   
             attendance.save()
 
-            df = pd.read_excel(file)
+            try:
+                df = pd.read_excel(file)
+            except:
+                return Response({'message':'Incorrect File Format!'},status=status.HTTP_400_BAD_REQUEST)
             for i in df.index:
                 sid = StudentDetail.objects.get(sid = User.objects.get(uid=df.iloc[i]['sid']))
                 stud_attendance = Attendance.objects.get_or_none(detail_id = detail_id, sid = sid )
@@ -65,4 +60,31 @@ def uploadAttendance(request):
 
     else:
         return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def studentsAttendance(request):
+    teacher = FacultyDetail.objects.get(tid= request.user)
+    subject = request.data.get('subject_id')
+    month = request.data.get('month')
+    if teacher is not None :
+        if subject is None or month is None:
+            return Response({'message':'Please provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
+        subject_id = Subject.objects.get_or_none(subject_id = subject)
+        if subject_id is None:
+            return Response({'message':'Invalid Subject ID!'},status=status.HTTP_400_BAD_REQUEST)
+        detail_id = SubjectDetail.objects.get_or_none(tid = teacher, subject_id = subject_id)
+        total = Attendance_Out_Of.objects.get_or_none(detail_id = detail_id)
+        total = total.__dict__
+        studentsattendance = Attendance.objects.filter(detail_id = detail_id).values(RollNo =F('sid__sid__uid'), Name =F('sid__name') , Attendance = F(month)).order_by('sid__sid__uid')
+        x = list(studentsattendance)
+        y = {}
+        y['total_attendance'] = total[month]
+        x.insert(0, y)
+        return JsonResponse(x,status=status.HTTP_200_OK, safe=False)
+    else:
+        return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
+
 

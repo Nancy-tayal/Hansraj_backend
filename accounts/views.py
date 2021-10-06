@@ -63,7 +63,7 @@ def LoginView(request):
                     'email': student.email,
                     'course': student.course,
                     'semester': student.semester,
-                    'university_roll_no': student.university_roll_no,
+                    'university_roll_no': str(student.university_roll_no),
                 }
             else:
                 data={
@@ -120,6 +120,7 @@ def otp_verification(request):
             return Response({'message':'Invalid OTP'},status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'message':'Invalid UserID(uid)'},status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))

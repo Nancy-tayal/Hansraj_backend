@@ -1,18 +1,11 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib import auth
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes,api_view
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import EmailMessage
-from django.conf import settings
-import secrets
-import string
 import pandas as pd
 from .models import StudentDetail
 from faculty.models import Subject

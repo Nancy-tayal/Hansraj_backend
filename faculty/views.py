@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -7,13 +6,11 @@ from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import permission_classes,api_view
 from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
 import pandas as pd
+
 from .models import SubjectDetail, Subject, FacultyDetail
-from attendance.models import Attendance_Out_Of
 from students.models import StudentDetail
-from marks.models import Marks_Out_Of
-from .serializers import SubjectsListSerializer, StudentsListSerializer
+from .serializers import SubjectsListSerializer, StudentsDetailSerializer
 # Create your views here.
 User = get_user_model()
 
@@ -122,4 +119,21 @@ def subjectsList(request):
 
 
 
-
+@api_view(["POST"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def studentsDetails(request):
+    teacher = FacultyDetail.objects.get(tid= request.user)
+    subject = request.data.get('subject_id')
+    if teacher is not None:
+        if subject is None:
+            return Response({'message':'Please provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
+        subject_id = Subject.objects.get_or_none(subject_id = subject)
+        if subject_id is None:
+            return Response({'message':'Invalid Subject ID!'},status=status.HTTP_400_BAD_REQUEST)
+        detail_id = SubjectDetail.objects.get_or_none(tid = teacher, subject_id = subject_id)
+        studentsdetail = StudentDetail.objects.filter(subject = detail_id)
+        serialized_data = StudentsDetailSerializer(studentsdetail, many = True)
+        return Response(serialized_data.data,status=status.HTTP_200_OK)
+    else:
+        return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)

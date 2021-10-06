@@ -24,13 +24,19 @@ class SubjectsListSerializer(serializers.ModelSerializer):
 
 
 # Use it for multiple reading object(List)
-class StudentsListSerializer(serializers.ModelSerializer):
+class StudentsDetailSerializer(serializers.ModelSerializer):
 
     sid = serializers.SerializerMethodField(source='skill_set')
+    university_roll_no = serializers.SerializerMethodField(source='university_roll_no')
     class Meta:
         model = StudentDetail
-        fields = ['sid', 'name']     
+        fields = ['sid', 'name', 'course', 'university_roll_no', 'email']     
     
     def get_sid(self, instance):
         return instance.sid.uid
 
+    
+    def get_university_roll_no(self, instance):
+        return str(instance.university_roll_no)
+
+    
