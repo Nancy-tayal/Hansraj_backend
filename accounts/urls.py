@@ -8,4 +8,5 @@ urlpatterns = [
     path('otp-verification/', otp_verification, name=None),
     path('forget-password/', forget_password, name=None),
     path('add-users/', addUsers, name=None),
+    path('logout/', logout_user, name=None),
 ]
