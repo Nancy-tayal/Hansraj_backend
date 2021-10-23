@@ -1,3 +1,4 @@
+import json
 from django.db.models import F
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,8 +27,8 @@ def uploadMarks(request):
         subject_id = request.data.get('subject_id')
         field = request.data.get('field')
         total_marks = int(request.data.get('total_marks'))
-        file = request.data.get('file')
-        if subject_id is None or field is None or total_marks is None or file is None:
+        data = request.data.get('data')
+        if subject_id is None or field is None or total_marks is None or data is None:
             return Response({'message':'Provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
         else:
             try:
@@ -42,10 +43,10 @@ def uploadMarks(request):
                 print('hi')
                 setattr(marks, field, total_marks) 
             marks.save()
-            try:
-                df = pd.read_excel(file)
-            except:
-                return Response({'message':'Incorrect File Format!'},status=status.HTTP_400_BAD_REQUEST)
+            
+            data = json.loads(data)
+            df = pd.json_normalize(data)
+            print(df)
             for i in df.index:
                 sid = StudentDetail.objects.get(sid = User.objects.get(uid=df.iloc[i]['sid']))
                 stud_marks = Marks.objects.get_or_none(detail_id = detail_id, sid = sid )

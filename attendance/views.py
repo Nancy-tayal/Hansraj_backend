@@ -1,3 +1,4 @@
+import json
 from django.db.models import F
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,8 +25,9 @@ def uploadAttendance(request):
         subject_id = request.data.get('subject_id')
         month = request.data.get('month')
         total_lectures = int(request.data.get('total_lectures'))
-        file = request.data.get('file')
-        if subject_id is None or month is None or total_lectures is None or file is None:
+        data = request.data.get('data')
+        
+        if subject_id is None or month is None or total_lectures is None or data is None:
             return Response({'message':'Provide all the details!'},status=status.HTTP_400_BAD_REQUEST)
         else:
             try:
@@ -41,10 +43,9 @@ def uploadAttendance(request):
             attendance.total = attendance.m1 + attendance.m2 + attendance.m3 + attendance.m4 + attendance.m5 + attendance.m6 + attendance.m7 + attendance.m8 + attendance.m9 + attendance.m10 + attendance.m11 + attendance.m12   
             attendance.save()
 
-            try:
-                df = pd.read_excel(file)
-            except:
-                return Response({'message':'Incorrect File Format!'},status=status.HTTP_400_BAD_REQUEST)
+            data = json.loads(data)
+            df = pd.json_normalize(data)
+            print(df)
             for i in df.index:
                 sid = StudentDetail.objects.get(sid = User.objects.get(uid=df.iloc[i]['sid']))
                 stud_attendance = Attendance.objects.get_or_none(detail_id = detail_id, sid = sid )
