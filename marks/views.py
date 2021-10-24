@@ -77,7 +77,7 @@ def studentsMarks(request):
         detail_id = SubjectDetail.objects.get_or_none(tid = teacher, subject_id = subject_id)
         total = Marks_Out_Of.objects.get_or_none(detail_id = detail_id)
         total = total.__dict__
-        stud_marks = Marks.objects.filter(detail_id = detail_id).values(RollNo =F('sid__sid__uid'), Name =F('sid__name') , Marks = F(field)).order_by('sid__sid__uid')
+        stud_marks = Marks.objects.filter(detail_id = detail_id).values(RollNo =F('sid__sid__uid'), Name =F('sid__name') , course= F('sid__course'),Marks = F(field)).order_by('sid__sid__uid')
         x = list(stud_marks)
         y = {}
         y['total_marks']= total[field]

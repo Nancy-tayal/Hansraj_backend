@@ -79,7 +79,7 @@ def studentsAttendance(request):
         detail_id = SubjectDetail.objects.get_or_none(tid = teacher, subject_id = subject_id)
         total = Attendance_Out_Of.objects.get_or_none(detail_id = detail_id)
         total = total.__dict__
-        studentsattendance = Attendance.objects.filter(detail_id = detail_id).values(RollNo =F('sid__sid__uid'), Name =F('sid__name') , Attendance = F(month)).order_by('sid__sid__uid')
+        studentsattendance = Attendance.objects.filter(detail_id = detail_id).values(RollNo =F('sid__sid__uid'), Name =F('sid__name') , course = F('sid__course'), Attendance = F(month)).order_by('sid__sid__uid')
         x = list(studentsattendance)
         y = {}
         y['total_attendance'] = total[month]
