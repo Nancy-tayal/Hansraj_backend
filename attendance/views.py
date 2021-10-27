@@ -89,3 +89,25 @@ def studentsAttendance(request):
         return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(["GET"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def viewAttendance(request):
+    student = StudentDetail.objects.get(sid= request.user)
+    if student is not None :
+        x = dict()
+        attendance = dict()
+        out_of = dict()
+        for sub in student.subject.all():
+            atnd = Attendance.objects.get_or_none(sid = student, detail_id = sub.detail_id)
+            if atnd is not None:
+                attendance[sub.subject_id.subject_name] = atnd.total
+                count = Attendance_Out_Of.objects.get_or_none(detail_id = sub.detail_id)
+                out_of[sub.subject_id.subject_name] = count.total
+        x['attendance'] = attendance
+        x['out_of'] = out_of
+        return Response(x,status=status.HTTP_200_OK)
+    else:
+        return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
+
+

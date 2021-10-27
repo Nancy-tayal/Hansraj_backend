@@ -1,3 +1,4 @@
+import json
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -8,7 +9,8 @@ from rest_framework.decorators import permission_classes,api_view
 from django.core.exceptions import ObjectDoesNotExist
 import pandas as pd
 from .models import StudentDetail
-from faculty.models import Subject
+from faculty.models import SubjectDetail
+from django.http import HttpResponse
 # Create your views here.
 
 User = get_user_model()
@@ -40,3 +42,20 @@ def studentdetails(request):
                 return Response({'message': 'Student with sid {} has no occurence in the login table! Please get the student registered first!'.format(df.iloc[i]['sid'])}, status = status.HTTP_400_BAD_REQUEST)
     return Response({'message':'Student Details added successfully'},status=status.HTTP_200_OK)
     
+@api_view(["GET"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def subjectTeachers(request):
+    student = StudentDetail.objects.get(sid= request.user)
+    if student is not None:
+        x = list()
+        for sub in student.subject.all():
+            sub_detail = {'subject': sub.subject_id.subject_name, 'teacher': sub.tid.name, 'email': sub.tid.email}
+            x.append(sub_detail)
+        df = pd.DataFrame(x)
+        df = df.groupby('subject').aggregate({'subject':'first', 'teacher':', '.join, 'email':', '.join}).tail()
+        df = df.to_dict(orient='records')
+        return Response(df, status = status.HTTP_200_OK)        
+    else:
+        return Response({'message':'Student Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
+
