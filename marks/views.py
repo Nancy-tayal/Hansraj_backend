@@ -1,5 +1,6 @@
 import json
 from django.db.models import F
+from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib import auth
@@ -85,3 +86,47 @@ def studentsMarks(request):
         return JsonResponse(x,status=status.HTTP_200_OK, safe=False)
     else:
         return Response({'message':'Teacher Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+@csrf_exempt
+def getMarks(request):
+    if request.data.get('detail_id') is None :
+        return Response({'message':'Please Provide the detail_id'},status=status.HTTP_400_BAD_REQUEST)
+    elif request.data.get('field') is None :
+        return Response({'message':'Please Provide the field(assignment or internal'},status=status.HTTP_400_BAD_REQUEST)
+    else :
+        student = StudentDetail.objects.get(sid= request.user)
+        if student is not None :
+            x = dict()
+            marks = Marks.objects.get_or_none(sid = student, detail_id = request.data.get('detail_id'))
+            if marks is not None:
+                if request.data.get('field') == 'assignment':
+                    assignment_marks = Marks.objects.filter(detail_id = request.data.get('detail_id'), sid = student).values('a1','a2','a3','a4','a5','a6','a7','a8','a9','a10')
+                    assignment_marks = list(assignment_marks)[0]
+                    assignment_out_of = Marks_Out_Of.objects.filter(detail_id = request.data.get('detail_id')).values('a1','a2','a3','a4','a5','a6','a7','a8','a9','a10')
+                    assignment_out_of = list(assignment_out_of)[0]
+                    for i in range(1,11):
+                        if assignment_out_of['a'+ str(i)] is None:
+                            del assignment_marks['a'+str(i)]
+                            del assignment_out_of['a'+str(i)]
+                    x['marks'] = assignment_marks
+                    x['out_of'] = assignment_out_of
+                elif request.data.get('field') == 'internal':
+                    internal_marks = Marks.objects.filter(detail_id = request.data.get('detail_id')).values('i1','i2','i3')
+                    internal_marks = list(internal_marks)[0]
+                    internal_out_of = Marks_Out_Of.objects.filter(detail_id = request.data.get('detail_id')).values('i1','i2','i3')
+                    internal_out_of = list(internal_out_of)[0]
+                    for i in range(1,4):
+                        if internal_marks['i'+str(i)] is None:
+                            del internal_marks['i'+str(i)]
+                            del internal_out_of['i'+str(i)]
+                    x['marks'] = internal_marks
+                    x['out_of'] = internal_out_of
+                print(x)
+                return Response(x,status=status.HTTP_200_OK)
+            else:
+                return Response({'message':'Marks does not exist!'},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message':'Student does not exist!'},status=status.HTTP_400_BAD_REQUEST)

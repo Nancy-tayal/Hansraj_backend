@@ -6,6 +6,14 @@ from faculty.models import Subject
 
 # Create your models here.
 
+class ObjectDoesNotExistManager(models.Manager):
+    def get_or_none(self, *args, **kwargs):
+        qs = self.get_queryset().filter(*args, **kwargs)
+        if qs.count() == 1:
+            return qs.first()
+        return None
+
+
 class Timetable(models.Model):
     COURSES= (
         ("B.Sc. (H) Botany","B.Sc. (H) Botany"),
@@ -51,7 +59,8 @@ class Timetable(models.Model):
     t6=models.ForeignKey(Subject,null=True, on_delete=models.CASCADE, related_name='time6', blank=True)    #2.00
     t7=models.ForeignKey(Subject,null=True, on_delete=models.CASCADE, related_name='time7', blank=True)    #3.00
     t8=models.ForeignKey(Subject,null=True, on_delete=models.CASCADE, related_name='time8', blank=True)    #4.00
-    
+    objects = ObjectDoesNotExistManager()
+
     class Meta:
         db_table = 'Timetable'
 

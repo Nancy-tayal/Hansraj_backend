@@ -59,3 +59,38 @@ def subjectTeachers(request):
     else:
         return Response({'message':'Student Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["GET"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def subjectTeachers(request):
+    student = StudentDetail.objects.get(sid= request.user)
+    if student is not None:
+        x = list()
+        for sub in student.subject.all():
+            sub_detail = {'subject': sub.subject_id.subject_name, 'teacher': sub.tid.name, 'email': sub.tid.email}
+            x.append(sub_detail)
+        df = pd.DataFrame(x)
+        df = df.groupby('subject').aggregate({'subject':'first', 'teacher':', '.join, 'email':', '.join}).tail()
+        df = df.to_dict(orient='records')
+        return Response(df, status = status.HTTP_200_OK)        
+    else:
+        return Response({'message':'Student Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@csrf_exempt
+@permission_classes((IsAuthenticated,))
+def subjectList(request):
+    student = StudentDetail.objects.get(sid= request.user)
+    if student is not None:
+        x = list()
+        for i in student.subject.all():
+            y = dict()
+            y['subject'] = i.__str__()
+            # if 'Lab' in y['subject']:
+            #     continue
+            y['detail_id'] = i.detail_id
+            x.append(y)
+        return Response(x, status = status.HTTP_200_OK)        
+    else:
+        return Response({'message':'Student Does Not Exist!'},status=status.HTTP_400_BAD_REQUEST)
