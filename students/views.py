@@ -70,7 +70,9 @@ def subjectTeachers(request):
             sub_detail = {'subject': sub.subject_id.subject_name, 'teacher': sub.tid.name, 'email': sub.tid.email}
             x.append(sub_detail)
         df = pd.DataFrame(x)
-        df = df.groupby('subject').aggregate({'subject':'first', 'teacher':', '.join, 'email':', '.join}).tail()
+        print(df)
+        df = df.groupby('subject').aggregate({'subject':'first', 'teacher':', '.join, 'email':', '.join})
+        print(df)
         df = df.to_dict(orient='records')
         return Response(df, status = status.HTTP_200_OK)        
     else:
