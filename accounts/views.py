@@ -196,7 +196,7 @@ def logout_user(request):
         token = RefreshToken(refresh_token)
         token.blacklist()
 
-        return Response({'message':'Users logged out successfully!'}, status=status.HTTP_205_RESET_CONTENT)
+        return Response({'message':'Users logged out successfully!'}, status=status.HTTP_200_OK)
     except Exception as e:
         print(e)
         return Response({'message':'Error logging user out!'}, status=status.HTTP_400_BAD_REQUEST)
